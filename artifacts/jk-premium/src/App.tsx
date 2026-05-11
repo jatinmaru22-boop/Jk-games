@@ -11,12 +11,23 @@ import { Transfer } from "@/pages/transfer";
 import { Profile } from "@/pages/profile";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
-import "@/lib/firebase";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { user } = useAuth();
+  const { user, firebaseReady } = useAuth();
+
+  if (!firebaseReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) return <Login />;
   return <Component />;
 }
@@ -37,7 +48,7 @@ function Router() {
 
 function App() {
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
   }, []);
 
   return (
