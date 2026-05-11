@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { useState } from "react";
 
 export type AppUser = {
   id: string;
@@ -22,28 +20,14 @@ export function useAuth() {
     return null;
   });
 
-  const [firebaseReady, setFirebaseReady] = useState(false);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
-      setFirebaseReady(true);
-      if (!firebaseUser) {
-        setUser(null);
-        localStorage.removeItem("jkp_user");
-      }
-    });
-    return unsub;
-  }, []);
-
   const saveUser = (newUser: AppUser | null) => {
     setUser(newUser);
     if (newUser) {
       localStorage.setItem("jkp_user", JSON.stringify(newUser));
     } else {
       localStorage.removeItem("jkp_user");
-      firebaseSignOut(auth).catch(() => {});
     }
   };
 
-  return { user, saveUser, firebaseReady };
+  return { user, saveUser, firebaseReady: true };
 }
