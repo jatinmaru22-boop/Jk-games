@@ -113,41 +113,40 @@ export function Crash() {
   }, [gameState, crashPoint]);
 
   useEffect(() => {
-    if (gameState === "CRASHED") {
-      setHistory(prev => [crashPoint, ...prev].slice(0, 10));
-      
-      const bet = Number(betAmount);
-      
-      if (!hasCashedOut) {
-        // Lost
-        updateBalance.mutate({ userId, data: { amount: -bet } }, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
-          }
-        });
-      }
+    if (gameState !== "CRASHED") return;
 
-      recordRound.mutate({
-        data: {
-          userId,
-          betAmount: bet,
-          multiplier: crashPoint,
-          cashoutMultiplier: hasCashedOut ? cashoutValue : null,
-          won: hasCashedOut,
-          profit: hasCashedOut ? (bet * cashoutValue) - bet : -bet
-        }
-      }, {
+    setHistory(prev => [crashPoint, ...prev].slice(0, 10));
+
+    const bet = Number(betAmount);
+
+    if (!hasCashedOut) {
+      updateBalance.mutate({ userId, data: { amount: -bet } }, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetGameHistoryQueryKey(userId) });
-          queryClient.invalidateQueries({ queryKey: getGetGameStatsQueryKey(userId) });
+          queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
         }
       });
-      
-      const timer = setTimeout(() => {
-        setGameState("IDLE");
-      }, 3000);
-      return () => clearTimeout(timer);
     }
+
+    recordRound.mutate({
+      data: {
+        userId,
+        betAmount: bet,
+        multiplier: crashPoint,
+        cashoutMultiplier: hasCashedOut ? cashoutValue : null,
+        won: hasCashedOut,
+        profit: hasCashedOut ? (bet * cashoutValue) - bet : -bet
+      }
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetGameHistoryQueryKey(userId) });
+        queryClient.invalidateQueries({ queryKey: getGetGameStatsQueryKey(userId) });
+      }
+    });
+
+    const timer = setTimeout(() => {
+      setGameState("IDLE");
+    }, 3000);
+    return () => clearTimeout(timer);
   }, [gameState, crashPoint, hasCashedOut, cashoutValue, betAmount, userId, updateBalance, recordRound, queryClient]);
 
   // Graph calculation

@@ -1,5 +1,11 @@
-import { useState, useEffect } from "react";
-import type { User } from "@workspace/api-client-react/src/generated/api.schemas";
+import { useState } from "react";
+
+type User = {
+  id: string;
+  username: string;
+  balance: number;
+  createdAt: string;
+};
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(() => {
