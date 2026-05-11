@@ -9,6 +9,10 @@ import { Home } from "@/pages/home";
 import { Crash } from "@/pages/crash";
 import { Transfer } from "@/pages/transfer";
 import { Profile } from "@/pages/profile";
+import { Mines } from "@/pages/mines";
+import { Slots } from "@/pages/slots";
+import { ChickenRoad } from "@/pages/chicken-road";
+import { DragonTiger } from "@/pages/dragon-tiger";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
 
@@ -38,6 +42,10 @@ function Router() {
       <Switch>
         <Route path="/" component={() => <ProtectedRoute component={Home} />} />
         <Route path="/crash" component={() => <ProtectedRoute component={Crash} />} />
+        <Route path="/mines" component={() => <ProtectedRoute component={Mines} />} />
+        <Route path="/slots" component={() => <ProtectedRoute component={Slots} />} />
+        <Route path="/chicken-road" component={() => <ProtectedRoute component={ChickenRoad} />} />
+        <Route path="/dragon-tiger" component={() => <ProtectedRoute component={DragonTiger} />} />
         <Route path="/transfer" component={() => <ProtectedRoute component={Transfer} />} />
         <Route path="/profile" component={() => <ProtectedRoute component={Profile} />} />
         <Route component={NotFound} />
