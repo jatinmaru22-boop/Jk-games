@@ -6,17 +6,26 @@ import { useToast } from "@/hooks/use-toast";
 import { Copy, User as UserIcon, Trophy, TrendingUp, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 
+function toJKId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) & 0xffff;
+  }
+  return "JK-" + String((hash % 9000) + 1000);
+}
+
 export function Profile() {
   const { user } = useAuth();
   const userId = user?.id || "";
+  const jkId = userId ? toJKId(userId) : "JK-????";
   const { toast } = useToast();
 
   const { data: userData } = useGetUser(userId, { query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId) } });
   const { data: stats } = useGetGameStats(userId, { query: { enabled: !!userId, queryKey: getGetGameStatsQueryKey(userId) } });
 
   const handleCopyId = () => {
-    navigator.clipboard.writeText(userId);
-    toast({ title: "Copied!", description: "User ID copied to clipboard." });
+    navigator.clipboard.writeText(jkId);
+    toast({ title: "Copied!", description: `${jkId} copied to clipboard.` });
   };
 
   return (
@@ -30,12 +39,15 @@ export function Profile() {
             <UserIcon size={48} className="text-primary" />
           </div>
           <h2 className="text-3xl font-black font-mono tracking-widest text-white mb-1">{userData?.username || user?.username}</h2>
-          <div className="flex items-center gap-2 mt-4 bg-black/50 px-4 py-2 rounded-full border border-border">
-            <span className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">ID:</span>
-            <span className="font-mono text-sm text-white">{userId}</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 hover:text-primary" onClick={handleCopyId}>
-              <Copy size={14} />
-            </Button>
+          <div className="flex flex-col items-center gap-3 mt-4">
+            <div className="flex items-center gap-3 bg-primary/10 border border-primary/50 px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(218,165,32,0.2)]">
+              <span className="text-xs text-primary/70 uppercase tracking-widest font-bold">Unique ID</span>
+              <span className="font-mono text-2xl font-black text-primary tracking-widest">{jkId}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary hover:bg-primary/10" onClick={handleCopyId}>
+                <Copy size={15} />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Share this ID so other players can send you points</p>
           </div>
           <p className="text-xs text-muted-foreground mt-4">
             Member since {userData?.createdAt ? format(new Date(userData.createdAt), "MMMM yyyy") : "..."}

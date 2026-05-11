@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useGetUser, getGetUserQueryKey, useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
+import { useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { GameHeader } from "@/components/game-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,11 +33,10 @@ function getRandomSymbol() {
 }
 
 export function Slots() {
-  const { user } = useAuth();
+  const { user, updateLocalBalance } = useAuth();
   const userId = user?.id || "";
   const queryClient = useQueryClient();
-  const { data: userData } = useGetUser(userId, { query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId) } });
-  const currentBalance = userData?.balance ?? user?.balance ?? 0;
+  const currentBalance = user?.balance ?? 0;
   
   const updateBalance = useUpdateBalance();
   const recordRound = useRecordGameRound();
@@ -91,9 +91,8 @@ export function Slots() {
 
       if (won) setLastWin({ amount: profit, multiplier });
 
-      updateBalance.mutate({ userId, data: { amount: profit } }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) })
-      });
+      updateLocalBalance(profit);
+      updateBalance.mutate({ userId, data: { amount: profit } });
       recordRound.mutate({ data: { userId, betAmount: bet, multiplier: Math.max(1, multiplier), cashoutMultiplier: Math.max(1, multiplier), won, profit } });
     }, Math.max(...SPIN_DURATION) * 1000);
   };
@@ -107,7 +106,9 @@ export function Slots() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
+    <div className="max-w-4xl mx-auto">
+      <GameHeader title="SLOTS" />
+      <div className="flex flex-col items-center justify-center gap-8">
       <div className="text-center mb-4">
         <h1 className="text-4xl md:text-6xl font-black font-mono tracking-widest text-primary drop-shadow-[0_0_20px_rgba(218,165,32,0.4)]">SLOTS</h1>
         <p className="text-muted-foreground uppercase tracking-widest mt-2">Spin the reels, hit the jackpot</p>
@@ -194,6 +195,7 @@ export function Slots() {
             {spinning ? "SPINNING..." : "SPIN"}
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );

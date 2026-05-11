@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useGetUser, getGetUserQueryKey, useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
+import { useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { GameHeader } from "@/components/game-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +16,10 @@ type State = "IDLE" | "PLAYING" | "WIN" | "LOSS";
 const GRID_SIZE = 25;
 
 export function Mines() {
-  const { user } = useAuth();
+  const { user, updateLocalBalance } = useAuth();
   const userId = user?.id || "";
   const queryClient = useQueryClient();
-  const { data: userData } = useGetUser(userId, { query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId) } });
-  const currentBalance = userData?.balance ?? user?.balance ?? 0;
+  const currentBalance = user?.balance ?? 0;
   
   const updateBalance = useUpdateBalance();
   const recordRound = useRecordGameRound();
@@ -74,9 +74,8 @@ export function Mines() {
       setGameState("LOSS");
       
       const profit = -bet;
-      updateBalance.mutate({ userId, data: { amount: profit } }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) })
-      });
+      updateLocalBalance(profit);
+      updateBalance.mutate({ userId, data: { amount: profit } });
       recordRound.mutate({ data: { userId, betAmount: bet, multiplier: 1, cashoutMultiplier: null, won: false, profit } });
     } else {
       // Hit a diamond
@@ -94,9 +93,8 @@ export function Mines() {
     setGameState("WIN");
     const profit = bet * currentMultiplier - bet;
     
-    updateBalance.mutate({ userId, data: { amount: profit } }, {
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) })
-    });
+    updateLocalBalance(profit);
+    updateBalance.mutate({ userId, data: { amount: profit } });
     recordRound.mutate({ data: { userId, betAmount: bet, multiplier: currentMultiplier, cashoutMultiplier: currentMultiplier, won: true, profit } });
   };
 
@@ -108,7 +106,9 @@ export function Mines() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto items-start">
+    <div className="max-w-5xl mx-auto">
+      <GameHeader title="MINES" />
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
       {/* Sidebar Controls */}
       <Card className="w-full lg:w-80 bg-card border-border">
         <CardContent className="p-6 flex flex-col gap-6">
@@ -252,6 +252,7 @@ export function Mines() {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

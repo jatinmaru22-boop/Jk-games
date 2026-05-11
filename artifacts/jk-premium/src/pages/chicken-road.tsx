@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useGetUser, getGetUserQueryKey, useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
+import { useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { GameHeader } from "@/components/game-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +17,10 @@ const HIT_CHANCE = 0.40;
 const MULTIPLIER_INC = 0.40;
 
 export function ChickenRoad() {
-  const { user } = useAuth();
+  const { user, updateLocalBalance } = useAuth();
   const userId = user?.id || "";
   const queryClient = useQueryClient();
-  const { data: userData } = useGetUser(userId, { query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId) } });
-  const currentBalance = userData?.balance ?? user?.balance ?? 0;
+  const currentBalance = user?.balance ?? 0;
   
   const updateBalance = useUpdateBalance();
   const recordRound = useRecordGameRound();
@@ -52,9 +52,8 @@ export function ChickenRoad() {
       setCurrentLane(nextLane);
       setGameState("LOSS");
       
-      updateBalance.mutate({ userId, data: { amount: -bet } }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) })
-      });
+      updateLocalBalance(-bet);
+      updateBalance.mutate({ userId, data: { amount: -bet } });
       recordRound.mutate({ data: { userId, betAmount: bet, multiplier: 1, cashoutMultiplier: null, won: false, profit: -bet } });
     } else {
       // Safe
@@ -74,9 +73,8 @@ export function ChickenRoad() {
     setGameState("WIN");
     const profit = bet * finalMult - bet;
     
-    updateBalance.mutate({ userId, data: { amount: profit } }, {
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) })
-    });
+    updateLocalBalance(profit);
+    updateBalance.mutate({ userId, data: { amount: profit } });
     recordRound.mutate({ data: { userId, betAmount: bet, multiplier: finalMult, cashoutMultiplier: finalMult, won: true, profit } });
   };
 
@@ -87,7 +85,9 @@ export function ChickenRoad() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto items-start">
+    <div className="max-w-5xl mx-auto">
+      <GameHeader title="CHICKEN ROAD" />
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
       <Card className="w-full lg:w-80 bg-card border-border">
         <CardContent className="p-6 flex flex-col gap-6">
           <div className="space-y-2">
@@ -188,6 +188,7 @@ export function ChickenRoad() {
           </AnimatePresence>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

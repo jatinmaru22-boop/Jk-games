@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useGetUser, getGetUserQueryKey, useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
+import { useUpdateBalance, useRecordGameRound } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { GameHeader } from "@/components/game-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +29,10 @@ function getRandomCard(): CardData {
 }
 
 export function DragonTiger() {
-  const { user } = useAuth();
+  const { user, updateLocalBalance } = useAuth();
   const userId = user?.id || "";
   const queryClient = useQueryClient();
-  const { data: userData } = useGetUser(userId, { query: { enabled: !!userId, queryKey: getGetUserQueryKey(userId) } });
-  const currentBalance = userData?.balance ?? user?.balance ?? 0;
+  const currentBalance = user?.balance ?? 0;
   
   const updateBalance = useUpdateBalance();
   const recordRound = useRecordGameRound();
@@ -90,9 +90,8 @@ export function DragonTiger() {
       setProfit(roundProfit);
       setGameState("RESULT");
 
-      updateBalance.mutate({ userId, data: { amount: roundProfit } }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) })
-      });
+      updateLocalBalance(roundProfit);
+      updateBalance.mutate({ userId, data: { amount: roundProfit } });
       recordRound.mutate({ data: { userId, betAmount: bet, multiplier, cashoutMultiplier: null, won: roundProfit > 0, profit: roundProfit } });
 
     }, 1500);
@@ -130,6 +129,7 @@ export function DragonTiger() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      <GameHeader title="DRAGON TIGER" />
       <div className="text-center">
         <h1 className="text-4xl md:text-6xl font-black font-mono tracking-widest text-primary drop-shadow-[0_0_20px_rgba(218,165,32,0.4)]">DRAGON TIGER</h1>
         <p className="text-muted-foreground uppercase tracking-widest mt-2">Higher card wins</p>

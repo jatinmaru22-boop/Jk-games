@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpdateBalance, useRecordGameRound, getGetUserQueryKey, getGetGameHistoryQueryKey, getGetGameStatsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { GameHeader } from "@/components/game-header";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { motion } from "framer-motion";
 type GameState = "IDLE" | "WAITING" | "FLYING" | "CRASHED";
 
 export function Crash() {
-  const { user } = useAuth();
+  const { user, updateLocalBalance } = useAuth();
   const userId = user?.id || "";
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -60,17 +61,14 @@ export function Crash() {
     const bet = Number(betAmount);
     const profit = (bet * currentMultiplier) - bet;
 
-    updateBalance.mutate({ userId, data: { amount: profit } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
-      }
-    });
+    updateLocalBalance(profit);
+    updateBalance.mutate({ userId, data: { amount: profit } });
 
     toast({
       title: "CASHED OUT!",
       description: `You won $${(bet * currentMultiplier).toFixed(2)}!`,
     });
-  }, [gameState, hasCashedOut, currentMultiplier, betAmount, updateBalance, userId, queryClient, toast]);
+  }, [gameState, hasCashedOut, currentMultiplier, betAmount, updateBalance, updateLocalBalance, userId, toast]);
 
   useEffect(() => {
     if (gameState === "WAITING") {
@@ -120,11 +118,8 @@ export function Crash() {
     const bet = Number(betAmount);
 
     if (!hasCashedOut) {
-      updateBalance.mutate({ userId, data: { amount: -bet } }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
-        }
-      });
+      updateLocalBalance(-bet);
+      updateBalance.mutate({ userId, data: { amount: -bet } });
     }
 
     recordRound.mutate({
@@ -136,24 +131,20 @@ export function Crash() {
         won: hasCashedOut,
         profit: hasCashedOut ? (bet * cashoutValue) - bet : -bet
       }
-    }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetGameHistoryQueryKey(userId) });
-        queryClient.invalidateQueries({ queryKey: getGetGameStatsQueryKey(userId) });
-      }
     });
 
     const timer = setTimeout(() => {
       setGameState("IDLE");
     }, 3000);
     return () => clearTimeout(timer);
-  }, [gameState, crashPoint, hasCashedOut, cashoutValue, betAmount, userId, updateBalance, recordRound, queryClient]);
+  }, [gameState, crashPoint, hasCashedOut, cashoutValue, betAmount, userId, updateBalance, updateLocalBalance, recordRound]);
 
   // Graph calculation
   const graphProgress = Math.min(currentMultiplier / 10, 1); // Normalize up to 10x for visual
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <GameHeader title="AVIATOR" />
       {/* History Bar */}
       <div className="flex items-center gap-2 overflow-x-auto bg-card border border-border p-3 rounded-lg hide-scrollbar">
         <span className="text-xs font-bold uppercase text-muted-foreground mr-2 shrink-0">Recent:</span>

@@ -29,5 +29,14 @@ export function useAuth() {
     }
   };
 
-  return { user, saveUser, firebaseReady: true };
+  const updateLocalBalance = (delta: number) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, balance: Math.max(0, prev.balance + delta) };
+      localStorage.setItem("jkp_user", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  return { user, saveUser, updateLocalBalance, firebaseReady: true };
 }
