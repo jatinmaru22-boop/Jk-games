@@ -27,13 +27,13 @@ export function ChickenRoad() {
   const { toast } = useToast();
 
   const [gameState, setGameState] = useState<State>("IDLE");
-  const [bet, setBet] = useState(10);
+  const [bet, setBet] = useState(1);
   const [currentLane, setCurrentLane] = useState(-1); // -1 = start, 0 to LANES-1
   const [multiplier, setMultiplier] = useState(1.0);
 
   const startGame = () => {
-    if (bet <= 0 || bet > currentBalance) {
-      toast({ title: "Invalid Bet", description: "Please enter a valid bet amount.", variant: "destructive" });
+    if (bet < 1 || bet > currentBalance) {
+      toast({ title: "Invalid Bet", description: `Minimum bet is 1. Maximum is your balance (${currentBalance}).`, variant: "destructive" });
       return;
     }
     setGameState("CROSSING");
@@ -105,7 +105,7 @@ export function ChickenRoad() {
               </div>
             </div>
             <div className="grid grid-cols-4 gap-2 pt-2">
-              {[10, 50, 100, 500].map(amt => (
+              {[1, 5, 10, 50].map(amt => (
                 <Button key={amt} variant="outline" size="sm" onClick={() => setBet(amt)} disabled={gameState !== "IDLE"} className="text-xs font-mono">
                   {amt}
                 </Button>

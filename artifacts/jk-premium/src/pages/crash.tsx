@@ -20,7 +20,6 @@ export function Crash() {
   const recordRound = useRecordGameRound();
 
   const [gameState, setGameState] = useState<GameState>("IDLE");
-  const [betAmount, setBetAmount] = useState<string>("10");
   const [currentMultiplier, setCurrentMultiplier] = useState(1.00);
   const [crashPoint, setCrashPoint] = useState(1.00);
   const [history, setHistory] = useState<number[]>([]);
@@ -31,7 +30,8 @@ export function Crash() {
   const multiplierTimerRef = useRef<number | null>(null);
   const countdownTimerRef = useRef<number | null>(null);
 
-  const PRESETS = [10, 50, 100, 500];
+  const PRESETS = [1, 5, 10, 50];
+  const [betAmount, setBetAmount] = useState<string>("1");
 
   const generateCrashPoint = () => {
     const r = Math.random();
@@ -41,8 +41,9 @@ export function Crash() {
 
   const startGame = () => {
     const bet = Number(betAmount);
-    if (isNaN(bet) || bet <= 0) {
-      toast({ title: "Invalid Bet", description: "Please enter a valid bet amount.", variant: "destructive" });
+    const balance = user?.balance ?? 0;
+    if (isNaN(bet) || bet < 1 || bet > balance) {
+      toast({ title: "Invalid Bet", description: `Minimum bet is 1. Maximum is your balance (${balance}).`, variant: "destructive" });
       return;
     }
     

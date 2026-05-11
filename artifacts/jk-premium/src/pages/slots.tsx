@@ -42,7 +42,7 @@ export function Slots() {
   const recordRound = useRecordGameRound();
   const { toast } = useToast();
 
-  const [bet, setBet] = useState(10);
+  const [bet, setBet] = useState(1);
   const [spinning, setSpinning] = useState(false);
   const [reels, setReels] = useState<any[][]>([
     [SYMBOLS[0], SYMBOLS[1], SYMBOLS[2]],
@@ -64,8 +64,8 @@ export function Slots() {
 
   const handleSpin = () => {
     if (spinning) return;
-    if (bet <= 0 || bet > currentBalance) {
-      toast({ title: "Invalid Bet", description: "Please enter a valid bet amount.", variant: "destructive" });
+    if (bet < 1 || bet > currentBalance) {
+      toast({ title: "Invalid Bet", description: `Minimum bet is 1. Maximum is your balance (${currentBalance}).`, variant: "destructive" });
       return;
     }
 
@@ -172,7 +172,7 @@ export function Slots() {
           </div>
 
           <div className="grid grid-cols-4 gap-2">
-            {[10, 25, 50, 100].map(amt => (
+            {[1, 5, 10, 50].map(amt => (
               <Button 
                 key={amt} 
                 variant="outline" 

@@ -26,7 +26,7 @@ export function Mines() {
   const { toast } = useToast();
 
   const [gameState, setGameState] = useState<State>("IDLE");
-  const [bet, setBet] = useState(10);
+  const [bet, setBet] = useState(1);
   const [difficulty, setDifficulty] = useState<Difficulty>("Easy");
   const [revealedTiles, setRevealedTiles] = useState<number[]>([]);
   const [diamondsRevealed, setDiamondsRevealed] = useState(0);
@@ -42,8 +42,8 @@ export function Mines() {
   const currentMultiplier = Math.max(1.0, 1.0 + (diamondsRevealed * 0.35) + (difficulty === "Hard" ? 0.2 : difficulty === "Medium" ? 0.1 : 0));
 
   const startGame = () => {
-    if (bet <= 0 || bet > currentBalance) {
-      toast({ title: "Invalid Bet", description: "Please enter a valid bet amount within your balance.", variant: "destructive" });
+    if (bet < 1 || bet > currentBalance) {
+      toast({ title: "Invalid Bet", description: `Minimum bet is 1. Maximum is your balance (${currentBalance}).`, variant: "destructive" });
       return;
     }
     
@@ -127,7 +127,7 @@ export function Mines() {
               </div>
             </div>
             <div className="grid grid-cols-4 gap-2 pt-2">
-              {[10, 50, 100, 500].map(amt => (
+              {[1, 5, 10, 50].map(amt => (
                 <Button 
                   key={amt} 
                   variant="outline" 

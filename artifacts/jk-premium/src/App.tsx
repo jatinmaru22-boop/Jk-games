@@ -40,6 +40,7 @@ function Router() {
   return (
     <Layout>
       <Switch>
+        <Route path="/login" component={Login} />
         <Route path="/" component={() => <ProtectedRoute component={Home} />} />
         <Route path="/crash" component={() => <ProtectedRoute component={Crash} />} />
         <Route path="/mines" component={() => <ProtectedRoute component={Mines} />} />

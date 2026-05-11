@@ -39,7 +39,7 @@ export function DragonTiger() {
   const { toast } = useToast();
 
   const [gameState, setGameState] = useState<State>("IDLE");
-  const [bet, setBet] = useState(10);
+  const [bet, setBet] = useState(1);
   const [selection, setSelection] = useState<Selection | null>(null);
   
   const [dragonCard, setDragonCard] = useState<CardData | null>(null);
@@ -49,8 +49,8 @@ export function DragonTiger() {
 
   const placeBet = (sel: Selection) => {
     if (gameState !== "IDLE") return;
-    if (bet <= 0 || bet > currentBalance) {
-      toast({ title: "Invalid Bet", description: "Please enter a valid bet amount.", variant: "destructive" });
+    if (bet < 1 || bet > currentBalance) {
+      toast({ title: "Invalid Bet", description: `Minimum bet is 1. Maximum is your balance (${currentBalance}).`, variant: "destructive" });
       return;
     }
 
