@@ -1,22 +1,26 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: J&K Premium Casino API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User management
+  - name: transfers
+    description: Point transfer operations
+  - name: games
+    description: Game history
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +28,173 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /users/register:
+    post:
+      operationId: registerUser
+      tags: [users]
+      summary: Register or login a user by username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterInput"
+      responses:
+        "200":
+          description: User found or created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: User not found
+
+  /users/{userId}/balance:
+    patch:
+      operationId: updateBalance
+      tags: [users]
+      summary: Update user balance
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BalanceUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /transfers:
+    post:
+      operationId: transferPoints
+      tags: [transfers]
+      summary: Transfer points from one user to another
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferInput"
+      responses:
+        "200":
+          description: Transfer successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transfer"
+        "400":
+          description: Insufficient balance or invalid transfer
+
+  /transfers/{userId}:
+    get:
+      operationId: getUserTransfers
+      tags: [transfers]
+      summary: Get transfer history for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transfer history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transfer"
+
+  /games/history/{userId}:
+    get:
+      operationId: getGameHistory
+      tags: [games]
+      summary: Get crash game history for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Game history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GameRound"
+
+  /games/record:
+    post:
+      operationId: recordGameRound
+      tags: [games]
+      summary: Record a completed crash game round
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameRoundInput"
+      responses:
+        "201":
+          description: Round recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameRound"
+
+  /games/stats/{userId}:
+    get:
+      operationId: getGameStats
+      tags: [games]
+      summary: Get game stats summary for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Game stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +205,115 @@ components:
       required:
         - status
 
+    User:
+      type: object
+      required: [id, username, balance, createdAt]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        balance:
+          type: number
+        createdAt:
+          type: string
+
+    UserRegisterInput:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          minLength: 3
+
+    BalanceUpdate:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          description: Amount to add (positive) or subtract (negative)
+
+    Transfer:
+      type: object
+      required: [id, fromUserId, toUserId, amount, createdAt]
+      properties:
+        id:
+          type: string
+        fromUserId:
+          type: string
+        toUserId:
+          type: string
+        fromUsername:
+          type: string
+        toUsername:
+          type: string
+        amount:
+          type: number
+        createdAt:
+          type: string
+
+    TransferInput:
+      type: object
+      required: [fromUserId, toUserId, amount]
+      properties:
+        fromUserId:
+          type: string
+        toUserId:
+          type: string
+        amount:
+          type: number
+          minimum: 1
+
+    GameRound:
+      type: object
+      required: [id, userId, betAmount, multiplier, cashoutMultiplier, won, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        betAmount:
+          type: number
+        multiplier:
+          type: number
+        cashoutMultiplier:
+          type: ["number", "null"]
+        won:
+          type: boolean
+        profit:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+
+    GameRoundInput:
+      type: object
+      required: [userId, betAmount, multiplier, won]
+      properties:
+        userId:
+          type: string
+        betAmount:
+          type: number
+        multiplier:
+          type: number
+        cashoutMultiplier:
+          type: ["number", "null"]
+        won:
+          type: boolean
+        profit:
+          type: ["number", "null"]
+
+    GameStats:
+      type: object
+      required: [totalRounds, totalWon, totalLost, biggestWin, totalProfit]
+      properties:
+        totalRounds:
+          type: integer
+        totalWon:
+          type: integer
+        totalLost:
+          type: integer
+        biggestWin:
+          type: number
+        totalProfit:
+          type: number
