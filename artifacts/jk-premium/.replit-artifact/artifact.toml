@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "J&K Premium Casino"
+version = "1.0.0"
+id = "artifacts/jk-premium"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26037
+
+[services.development]
+run = "pnpm --filter @workspace/jk-premium run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/jk-premium", "run", "build" ]
+publicDir = "artifacts/jk-premium/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26037"
+BASE_PATH = "/"
