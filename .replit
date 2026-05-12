@@ -48,3 +48,4 @@ VITE_FIREBASE_MEASUREMENT_ID = "G-H2K6P59SKG"
 
 [nix]
 channel = "stable-25_05"
+packages = ["python313Packages.rpm"]
